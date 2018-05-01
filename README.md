@@ -4,7 +4,7 @@ An easy tool for reading and encoding some **pretrained CNNs** model which can b
 
 Actually the tool has been implemented to work with the following models:
 
- - VGG-S,M,F models
+ - VGG-S,M,F
  - VGG-VD
  
 Compatibility with other models will be available sooner
