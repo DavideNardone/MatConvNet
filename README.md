@@ -9,4 +9,4 @@ Actually the tool has been implemented to work with the following models:
  
 Compatibility with other models will be available sooner
 
-**Working in progress...**
+**Work in progress...**
