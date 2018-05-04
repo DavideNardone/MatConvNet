@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import tensorflow as tf
 import numpy as np
 np.set_printoptions(threshold=np.inf)
-import numpy as np
 import scipy.misc
-import sys
-import os
 import scipy.io
 
 
@@ -14,6 +10,7 @@ import scipy.io
 class MatConvNet:
 
     def __init__(self, data_path):
+
         self.data_path = data_path
 
     def rec_dic(self, dat_type):
@@ -27,6 +24,7 @@ class MatConvNet:
 
     def decoding(self, d, indent=0, nkeys=0):
 
+        layers_seq = []
         _layers = {}
         _meta = {}
 
@@ -48,6 +46,7 @@ class MatConvNet:
                         mat_struct = d[key][i]
 
                         layer_name = str(mat_struct.name)
+                        layers_seq.append(layer_name)
 
                         # retrieving content for each struct
                         for k, v in mat_struct.__dict__.items():
@@ -61,13 +60,20 @@ class MatConvNet:
                         k_dic = self.rec_dic(v)
                         _meta.update({k: k_dic})
 
-        # FIXME: to remove
+        #TODO: to remove
         if isinstance(d, np.ndarray) and d.dtype.names is not None:  # Note: and short-circuits by default
             for n in d.dtype.names:  # This means it's a struct, it's bit of a kludge test.
                 print '\t' * indent + 'Field: ' + str(n)
-                decoding(d[n], indent + 1)
+                self.decoding(d[n], indent + 1)
 
-        return _layers, _meta
+        # unsqueeze the weights
+        for i, layer_name in enumerate(layers_seq):
+
+            if _layers[layer_name]['weights'].size != 0 and _layers[layer_name]['weights'][0].ndim < 4:
+                _layers[layer_name]['weights'][0] = np.expand_dims(_layers[layer_name]['weights'][0], axis=0)
+                _layers[layer_name]['weights'][0] = np.expand_dims(_layers[layer_name]['weights'][0], axis=0)
+
+        return layers_seq, _layers, _meta
 
     def loadmat(self):
         '''
@@ -79,6 +85,7 @@ class MatConvNet:
         from: `StackOverflow <http://stackoverflow.com/questions/7008608/scipy-io-loadmat-nested-structures-i-e-dictionaries>`_
         '''
         data = scipy.io.loadmat(self.data_path, struct_as_record=False, squeeze_me=True)
+
         return self.check_keys(data)
 
     def check_keys(self, dict):
@@ -103,29 +110,3 @@ class MatConvNet:
             else:
                 dict[strg] = elem
         return dict
-
-
-
-def main():
-
-    weight_file = '/home/davidenardone/TENSORFLOW/FINGERPRINT_RECOGNITION/models/imagenet-vgg-f.mat'
-
-    model = MatConvNet(weight_file)
-
-    matdata = model.loadmat()
-    layers, meta = model.decoding(matdata, nkeys=10)
-
-    # sort and then print all the layers of a loaded model (e.g., vgg-f)
-    layers_name = []
-    for k, v in layers.items():
-        layers_name.append(k)
-
-    layers_name_sorted = sorted(layers_name)
-    print layers_name_sorted
-
-    # print layers['conv1_1']['size']
-    # print layers['conv1_1']['weights'][0].shape
-
-
-if __name__ == '__main__':
-    main()
